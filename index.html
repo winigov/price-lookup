@@ -202,6 +202,12 @@ mark { background: var(--accent-soft); color: inherit; border-radius: 2px; paddi
 .steps div.now i { border-color: var(--accent); background: var(--accent-soft) }
 .note { font-size: 12px; color: var(--muted); padding: 18px 16px 0; line-height: 1.5 }
 .upl { display: flex; gap: 10px; align-items: center }
+.cam { position: relative; width: 100%; aspect-ratio: 1; max-height: 52vh; background: #000; border-radius: var(--r); overflow: hidden; display: grid; place-items: center }
+.cam video { width: 100%; height: 100%; object-fit: cover; display: block }
+.cam .frame { position: absolute; inset: 16%; border: 3px solid #fff; border-radius: 14px; box-shadow: 0 0 0 999px rgba(0, 0, 0, .35); pointer-events: none }
+.cam .wait { position: absolute; color: #fff; font-size: 13px; padding: 16px; text-align: center }
+.cammsg { font-size: 13px; color: var(--muted); margin: 10px 0 14px }
+.cammsg.err { color: var(--warn) }
 .upl img { width: 54px; height: 54px; object-fit: cover; border-radius: 4px }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -268,7 +274,7 @@ const ANSWERS = [
 /* Floor samples with a QR sticker (the camera is simulated in the prototype) */
 const FLOOR = [
   { type: 'cfg', id: 'BB-01', place: 'Зал 1, у окна' },
-  { type: 'cfg', id: (D.cfgs.find(c => c.series === 'Cubic' && c.shape === 'Прямой') || {}).id, place: 'Зал 1, центр' },
+  { type: 'cfg', id: 'CU-22', place: 'Зал 1, центр' },
   { type: 'cfg', id: 'OR-05', place: 'Зал 2' },
   { type: 'prod', id: 'SAL-955', place: 'Зал 1, рядом с Bon Bon' },
   { type: 'prod', id: 'SAL-857', place: 'Зал 2, у входа' },
@@ -676,7 +682,7 @@ function openClient(baseKey, ans) {
   </div>
   <div class="actions"><button class="btn ghost flex0" data-act="close">Закрыть</button><button class="btn" data-act="kp">Отправить КП клиенту</button></div></div>`;
 }
-function closeLayer() { $layer.innerHTML = ''; }
+function closeLayer() { stopScan(); $layer.innerHTML = ''; }
 
 /* ---------- sheets ---------- */
 function openFabrics() {
@@ -701,10 +707,67 @@ function fillFabrics() {
 function openQr() {
   $layer.innerHTML = `<div class="shade" data-act="shade"><div class="sheet" role="dialog" aria-label="QR на образце">
     <div class="sh"><h3>QR на образце в зале</h3><button class="lnk" data-act="close">Закрыть</button></div>
-    <div class="sb"><p class="cap" style="font-size:13px;color:var(--muted);margin:0 0 12px">В рабочей версии здесь откроется камера. На каждом образце в зале — наклейка с QR, она ведёт на живую цену. В прототипе выберите образец, как будто навели камеру:</p>
+    <div class="sb"><div class="cam"><video id="cam" playsinline muted autoplay></video><div class="frame"></div><div class="wait" id="camwait">Включаю камеру…</div></div>
+      <p class="cammsg" id="cammsg">Наведите камеру на QR-наклейку образца.</p>
+      <h2 style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:4px 0 10px;font-weight:600">Или выберите образец</h2>
       <div class="list">${FLOOR.map(f => f.type === 'cfg'
         ? `<button class="row" data-act="scan" data-t="cfg" data-id="${f.id}"><span class="pic" style="background-image:url(${CFG[f.id].img})"></span><span class="txt"><span class="t">${esc(cfgTitle(CFG[f.id]))}</span><span class="s">${esc(f.place)}</span></span><span class="pr">${ICON.qr}</span></button>`
         : `<button class="row" data-act="scan" data-t="prod" data-id="${f.id}"><span class="pic photo" style="background-image:url(${PROD[f.id].photo})"></span><span class="txt"><span class="t">${esc(PROD[f.id].name)}</span><span class="s">${esc(f.place)}</span></span><span class="pr">${ICON.qr}</span></button>`).join('')}</div></div></div></div>`;
+  startScan();
+}
+
+/* ---------- QR scanner: camera + jsQR. Where the camera is refused, the list above stays as the fallback. ---------- */
+let scan = null;
+function loadJsQR() {
+  if (window.jsQR) return Promise.resolve();
+  return new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'vendor/jsQR.min.js';
+    s.onload = res; s.onerror = () => rej(new Error('jsQR')); document.head.appendChild(s); });
+}
+function camMsg(text, err) {
+  const m = document.getElementById('cammsg'); if (m) { m.textContent = text; m.classList.toggle('err', !!err); }
+  const w = document.getElementById('camwait'); if (w) w.hidden = !err; if (w && err) w.textContent = 'Камера недоступна';
+}
+async function startScan() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { camMsg('Камера недоступна в этом браузере. Выберите образец из списка.', true); return; }
+  try {
+    const [stream] = await Promise.all([navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }), loadJsQR()]);
+    const v = document.getElementById('cam');
+    if (!v) { stream.getTracks().forEach(t => t.stop()); return; }
+    v.srcObject = stream; await v.play().catch(() => {});
+    const w = document.getElementById('camwait'); if (w) w.hidden = true;
+    scan = { stream, t: 0, canvas: document.createElement('canvas') };
+    const tick = () => {
+      if (!scan) return;
+      const vv = document.getElementById('cam'); if (!vv) { stopScan(); return; }
+      if (vv.readyState >= 2 && vv.videoWidth) {
+        const k = Math.min(1, 720 / Math.max(vv.videoWidth, vv.videoHeight));
+        const cw = Math.round(vv.videoWidth * k), ch = Math.round(vv.videoHeight * k);
+        const c = scan.canvas; c.width = cw; c.height = ch;
+        const ctx = c.getContext('2d', { willReadFrequently: true }); ctx.drawImage(vv, 0, 0, cw, ch);
+        const code = window.jsQR(ctx.getImageData(0, 0, cw, ch).data, cw, ch, { inversionAttempts: 'attemptBoth' });
+        if (code && code.data && handleCode(code.data)) return;
+      }
+      scan.t = setTimeout(tick, 120);
+    };
+    tick();
+  } catch (e) {
+    camMsg('Камера не открылась. Разрешите доступ к камере для этого сайта в настройках браузера или выберите образец из списка.', true);
+  }
+}
+function stopScan() { if (!scan) return; clearTimeout(scan.t); scan.stream.getTracks().forEach(t => t.stop()); scan = null; }
+function handleCode(text) {
+  const m = String(text).match(/#((?:cfg|p)-[A-Za-z0-9-]+)/);
+  if (!m || !openHash(m[1], true)) { camMsg('Это не наклейка образца. Наведите на QR с образца в зале.', true); return false; }
+  return true;
+}
+function openHash(h, fromScan) {
+  let v = null;
+  if (h.startsWith('cfg-') && CFG[h.slice(4)]) v = { v: 'cfg', id: h.slice(4) };
+  else if (h.startsWith('p-') && PROD[h.slice(2)]) v = { v: 'prod', id: h.slice(2) };
+  if (!v) return false;
+  stopScan(); closeLayer(); st.stack = [{ v: 'home' }, v]; render(); window.scrollTo(0, 0);
+  toast(fromScan ? 'QR считан' : 'Открыто по QR');
+  return true;
 }
 function openAbout() {
   $layer.innerHTML = `<div class="shade" data-act="shade"><div class="sheet" role="dialog" aria-label="О прототипе">
@@ -792,6 +855,9 @@ document.addEventListener('click', e => {
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $layer.innerHTML) closeLayer(); });
 
 render();
+function fromHash() { const h = decodeURIComponent(location.hash.slice(1)); if (h) openHash(h, false); }
+window.addEventListener('hashchange', fromHash);
+fromHash();
 })();
 </script>
 </body></html>
