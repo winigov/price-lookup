@@ -10,25 +10,25 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: one phone-width column (the seller's phone), sticky search on top, sticky action bar at the bottom of detail screens */
+/* Layout (variant C): price first in every row; fabric, category, search and a big round QR button live in one dock at the bottom, under the thumb */
 :root {
-  --bg: #F5F5F5; --surface: #FFFFFF; --ink: #333333; --muted: #7C7377; --line: #E7E7E7;
+  --bg: #F5F5F5; --surface: #FFFFFF; --ink: #333333; --muted: #6F6A6C; --line: #E7E7E7; --field: #F2EFF0;
   --accent: #B95162; --accent-ink: #FFFFFF; --accent-soft: #F7EAED;
   --ok: #2E7D4F; --ok-soft: #E5F2EA; --warn: #93641A; --warn-soft: #F8EEDC;
-  --scheme: #FFFFFF; --shade: rgba(30, 20, 24, .48);
+  --scheme: #FFFFFF; --shade: rgba(30, 20, 24, .48); --qr-glow: rgba(185, 81, 98, .35);
   --font: "Montserrat", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  --r: 6px;
+  --r: 6px; --dock-h: 150px; --kb: 0px;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #171416; --surface: #221E20; --ink: #EEE8EA; --muted: #A99FA3; --line: #3A3336;
+  --bg: #171416; --surface: #221E20; --ink: #EEE8EA; --muted: #ADA3A7; --line: #3A3336; --field: #2C2729;
   --accent: #C9606F; --accent-ink: #FFFFFF; --accent-soft: #3A2328;
   --ok: #74C995; --ok-soft: #1D3226; --warn: #E2B566; --warn-soft: #3A2F1B;
-  --scheme: #F3EFF0; --shade: rgba(0, 0, 0, .62); color-scheme: dark } }
+  --scheme: #F3EFF0; --shade: rgba(0, 0, 0, .62); --qr-glow: rgba(0, 0, 0, .45); color-scheme: dark } }
 :root[data-theme="dark"] {
-  --bg: #171416; --surface: #221E20; --ink: #EEE8EA; --muted: #A99FA3; --line: #3A3336;
+  --bg: #171416; --surface: #221E20; --ink: #EEE8EA; --muted: #ADA3A7; --line: #3A3336; --field: #2C2729;
   --accent: #C9606F; --accent-ink: #FFFFFF; --accent-soft: #3A2328;
   --ok: #74C995; --ok-soft: #1D3226; --warn: #E2B566; --warn-soft: #3A2F1B;
-  --scheme: #F3EFF0; --shade: rgba(0, 0, 0, .62); color-scheme: dark }
+  --scheme: #F3EFF0; --shade: rgba(0, 0, 0, .62); --qr-glow: rgba(0, 0, 0, .45); color-scheme: dark }
 
 * { box-sizing: border-box }
 html, body { background: var(--bg); color: var(--ink) }
@@ -37,115 +37,121 @@ button, input, textarea { font: inherit; color: inherit }
 button { cursor: pointer }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
 .num { font-variant-numeric: tabular-nums }
+h1, h2, h3 { text-wrap: balance }
 
-#app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: var(--bg); position: relative; padding-bottom: 96px }
+#app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: var(--bg); padding-bottom: calc(var(--dock-h) + 16px) }
 .wrap { padding-inline: 16px }
+.stack { display: flex; flex-direction: column; gap: 10px }
 
-/* top */
-.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding: 12px 16px 10px; border-bottom: 1px solid var(--line) }
-.brand { display: flex; align-items: center; gap: 10px }
-.mark { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 700; font-size: 12px; letter-spacing: .02em; flex: none }
-.brand h1 { font-size: 17px; margin: 0; font-weight: 700; line-height: 1.15 }
-.status { font-size: 12px; color: var(--ok); display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
-.status i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); flex: none }
-.brand .grow { flex: 1; min-width: 0 }
-.icon-btn { border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); height: 34px; min-width: 34px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 600; white-space: nowrap }
+/* header */
+.head { display: flex; align-items: center; gap: 12px; padding: 14px 16px 0 }
+.head .logo { width: 44px; height: 44px; flex: none; display: block }
+.head .ttl { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px }
+.head .ttl b { font-size: 16px; line-height: 20px; font-weight: 700 }
+.status { font-size: 12px; line-height: 16px; color: var(--ok) }
+.sw { height: 44px; min-width: 44px; padding: 0 10px; border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; font-size: 13px; flex: none; white-space: nowrap }
 .sw.run { border-color: var(--accent); color: var(--accent); background: var(--accent-soft) }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; height: 56px; display: flex; align-items: center; gap: 8px; padding: 0 16px; background: var(--bg); border-bottom: 1px solid var(--line) }
+.bar .title { flex: 1; min-width: 0; text-align: center; font-weight: 700; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.back { border: 0; background: none; padding: 8px 8px 8px 0; display: inline-flex; align-items: center; gap: 2px; font-weight: 600; color: var(--accent); white-space: nowrap; font-size: 15px }
 
-.search { margin-top: 10px; display: flex; gap: 8px }
-.field { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r); padding: 0 10px; height: 48px }
-.field:focus-within { border-color: var(--accent) }
-.field input { border: 0; outline: 0; background: transparent; flex: 1; min-width: 0; font-size: 16px; height: 100% }
-.field svg { flex: none; color: var(--muted) }
-.clear { border: 0; background: none; color: var(--muted); padding: 6px; font-size: 18px; line-height: 1 }
-.qr { height: 48px; width: 52px; border-radius: var(--r); border: 0; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; flex: none }
-
-.fabbar { margin-top: 10px; display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; border: 1px dashed var(--line); background: var(--surface); border-radius: var(--r); padding: 7px 10px; font-size: 13px }
-.fabbar b { font-weight: 600 }
-.fabbar .grow { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
-.sw-img { width: 26px; height: 26px; border-radius: 4px; background: var(--line) center/cover; flex: none; border: 1px solid var(--line) }
-
-.chips { display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px 2px; scrollbar-width: none }
+.chips { display: flex; gap: 8px; overflow-x: auto; padding: 14px 16px 2px; scrollbar-width: none }
 .chips::-webkit-scrollbar { display: none }
-.chip { flex: none; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 500; white-space: nowrap }
+.chip { flex: none; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 500; white-space: nowrap }
 .chip.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); font-weight: 600 }
 
-/* sections and rows */
-.sec { padding: 18px 16px 4px }
-.sec h2 { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; font-weight: 600; display: flex; justify-content: space-between; gap: 8px }
-.list { display: grid; gap: 8px }
-.row { display: flex; gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 10px; text-align: left; width: 100% }
-.row .pic { width: 64px; height: 64px; border-radius: 4px; flex: none; background: var(--scheme) center/contain no-repeat; border: 1px solid var(--line) }
-.row .pic.photo { background-size: cover }
-.row .txt { flex: 1; min-width: 0 }
-.row .t { font-weight: 600; font-size: 14px; line-height: 1.25 }
-.row .s { font-size: 12px; color: var(--muted); margin-top: 2px }
-.row .pr { text-align: right; flex: none }
-.row .pr b { display: block; font-size: 15px; font-weight: 700; white-space: nowrap }
-.row .pr small { font-size: 11px; color: var(--muted); white-space: nowrap }
-mark { background: var(--accent-soft); color: inherit; border-radius: 2px; padding: 0 1px }
+.sec { padding: 18px 16px 0 }
+.cap { font-size: 12px; line-height: 16px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; color: var(--muted); margin: 0 0 10px }
+.list { display: grid; gap: 10px }
 
-.series { display: grid; gap: 10px }
-.scard { position: relative; border-radius: var(--r); overflow: hidden; border: 0; padding: 0; text-align: left; background: var(--surface); width: 100% }
-.scard img { display: block; width: 100%; height: 132px; object-fit: cover }
-.scard .cap { position: absolute; inset: auto 0 0 0; padding: 26px 12px 10px; background: linear-gradient(transparent, rgba(20, 12, 15, .78)); color: #fff; display: flex; justify-content: space-between; align-items: end; gap: 8px }
-.scard .cap b { font-size: 18px; display: block }
-.scard .cap span { font-size: 12px; opacity: .9 }
-.scard .cap .from { text-align: right; white-space: nowrap; font-weight: 600; font-size: 14px }
+/* price-first row */
+.row { display: flex; gap: 12px; align-items: center; width: 100%; padding: 12px; border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); text-align: left }
+.row .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px }
+.row .p { font-size: 22px; line-height: 28px; font-weight: 700; white-space: nowrap }
+.row .t { font-size: 14px; line-height: 18px; font-weight: 600 }
+.row .s { font-size: 12px; line-height: 16px; color: var(--muted) }
+.row .pic { width: 72px; height: 64px; flex: none; display: block; object-fit: contain; background: var(--scheme); border-radius: 4px }
+.row .pic.photo { object-fit: cover }
+.row.fabric .pic { width: 56px; height: 56px; object-fit: cover }
+
+/* series row */
+.srow { display: flex; gap: 12px; align-items: center; width: 100%; padding: 0; overflow: hidden; border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); text-align: left }
+.srow img { width: 104px; height: 84px; object-fit: cover; flex: none; display: block }
+.srow .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; padding: 10px 12px 10px 0 }
+.srow .t { font-size: 16px; line-height: 20px; font-weight: 700 }
+.srow .s { font-size: 12px; line-height: 16px; color: var(--muted) }
+.srow .p { font-size: 15px; line-height: 20px; font-weight: 600 }
 
 .quick { display: flex; flex-wrap: wrap; gap: 8px }
-.quick button { border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); padding: 8px 12px; font-size: 13px }
-
-.empty { text-align: center; padding: 28px 16px; color: var(--muted) }
+.quick button { border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); padding: 9px 12px; font-size: 13px; line-height: 18px }
+.empty { text-align: center; padding: 24px 8px; color: var(--muted); font-size: 14px }
 .empty b { color: var(--ink); display: block; margin-bottom: 6px }
+.note { font-size: 12px; color: var(--muted); padding: 18px 16px 0; line-height: 1.5; margin: 0 }
+.lnk { color: var(--accent); font-weight: 600; background: none; border: 0; padding: 0; font-size: 13px; text-decoration: none }
+.ghost-btn { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); font-weight: 600; font-size: 14px; text-align: center; padding: 8px 12px }
+.ghost-btn.accent { border: 1.5px dashed var(--accent); color: var(--accent); background: transparent }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px }
 
 /* detail */
-.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; align-items: center; gap: 8px; background: var(--bg); padding: 10px 16px; border-bottom: 1px solid var(--line) }
-.bar h1 { font-size: 16px; margin: 0; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
-.back { border: 0; background: none; padding: 6px 8px 6px 0; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: var(--accent) }
-.hero { background: var(--scheme); border-bottom: 1px solid var(--line); display: grid; place-items: center; padding: 14px }
-.hero img { max-height: 220px; width: auto; max-width: 100% }
-.hero.photo { padding: 0 }
-.hero.photo img { width: 100%; max-height: 260px; object-fit: cover }
-.head { padding: 14px 16px 0 }
-.head h2 { margin: 0; font-size: 20px; line-height: 1.2; text-wrap: balance }
-.meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px }
-.tag { font-size: 12px; border-radius: 4px; padding: 3px 8px; background: var(--surface); border: 1px solid var(--line) }
-.tag.ok { color: var(--ok); background: var(--ok-soft); border-color: transparent }
+.hero { background: var(--scheme); border-bottom: 1px solid var(--line) }
+.hero img { display: block; width: 100%; height: 200px; object-fit: cover }
+.summary { display: flex; gap: 14px; align-items: center }
+.summary .box { width: 132px; height: 100px; flex: none; background: var(--scheme); border: 1px solid var(--line); border-radius: var(--r); display: grid; place-items: center; overflow: hidden }
+.summary .box img { max-width: 116px; max-height: 84px; display: block }
+.summary .box img.photo { max-width: none; max-height: none; width: 100%; height: 100%; object-fit: cover }
+.summary .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px }
+.summary h1 { margin: 0; font-size: 20px; line-height: 26px }
+.summary span { font-size: 13px; line-height: 18px; color: var(--muted) }
+.tags { display: flex; flex-wrap: wrap; gap: 6px }
+.tag { font-size: 12px; line-height: 16px; padding: 4px 8px; border-radius: 4px; background: var(--surface); border: 1px solid var(--line) }
 
-.seg { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px }
-.seg button { height: 40px; border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); font-weight: 600 }
-.seg button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent) }
-.lbl { font-size: 12px; color: var(--muted); margin: 14px 0 6px; display: flex; justify-content: space-between; gap: 8px }
-.lbl a, .lnk { color: var(--accent); font-weight: 600; background: none; border: 0; padding: 0; font-size: 12px }
-
-.price { margin-top: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px }
-.price .big { font-size: 30px; font-weight: 700; letter-spacing: -.01em }
-.price .cap { font-size: 12px; color: var(--muted) }
-.why { margin-top: 10px; border-top: 1px dashed var(--line); padding-top: 10px; display: grid; gap: 6px; font-size: 13px }
-.why div { display: flex; justify-content: space-between; gap: 10px }
-.why div span:first-child { color: var(--muted); min-width: 0 }
-.why div span:last-child { text-align: right; white-space: nowrap }
-.src { margin-top: 8px; font-size: 12px; color: var(--ok); display: flex; gap: 6px; align-items: center }
-
-.actions { position: fixed; z-index: 6; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: var(--bg); border-top: 1px solid var(--line); padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px }
-.btn { flex: 1; height: 50px; border-radius: var(--r); border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 13px; white-space: nowrap; padding: 0 12px }
-.btn.ghost { background: var(--surface); color: var(--accent) }
-.btn.flex0 { flex: 0 0 auto }
-.btn:disabled { opacity: .45 }
-.nonstd { margin: 18px 16px 0; width: calc(100% - 32px); border: 1.5px dashed var(--accent); background: transparent; color: var(--accent); border-radius: var(--r); padding: 12px; font-weight: 600; text-align: left; display: flex; gap: 10px; align-items: center }
+.rcpt { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: flex; flex-direction: column; gap: 12px }
+.rcpt .cap { margin: 0 }
+.lines { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; row-gap: 10px; font-size: 14px; line-height: 20px }
+.lines .v { white-space: nowrap; font-weight: 600; text-align: right }
+.lines .m { color: var(--muted) }
+.lines .on { color: var(--accent); font-weight: 700 }
+.total { border-top: 1px dashed var(--line); padding-top: 12px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap }
+.total span { font-size: 14px; font-weight: 600 }
+.total b { font-size: 32px; line-height: 38px; letter-spacing: -.01em; white-space: nowrap }
+.src { display: flex; align-items: flex-start; gap: 6px; font-size: 12px; line-height: 16px; color: var(--ok) }
+.src svg { flex: none; margin-top: 1px }
 
 /* builder */
 .mod { display: flex; gap: 10px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 8px 10px }
-.mod .pic { width: 52px; height: 52px; border-radius: 4px; background: #fff center/cover; flex: none; border: 1px solid var(--line) }
-.mod .txt { flex: 1; min-width: 0; font-size: 13px }
-.mod .txt b { display: block; font-weight: 600 }
-.mod .txt span { color: var(--muted); font-size: 12px }
-.step { display: flex; align-items: center; gap: 2px; flex: none }
-.step button { width: 34px; height: 34px; border-radius: var(--r); border: 1px solid var(--line); background: var(--surface); font-size: 18px; line-height: 1 }
-.step b { width: 26px; text-align: center }
 .mod.on { border-color: var(--accent) }
-.total { display: flex; justify-content: space-between; align-items: baseline; gap: 10px }
+.mod img { width: 52px; height: 52px; border-radius: 4px; object-fit: cover; flex: none; display: block; background: #fff }
+.mod .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px }
+.mod .txt b { font-size: 14px; line-height: 18px; font-weight: 600 }
+.mod .txt span { font-size: 12px; line-height: 16px; color: var(--muted) }
+.step { display: flex; align-items: center; gap: 2px; flex: none }
+.step button { width: 40px; height: 40px; border-radius: var(--r); border: 1px solid var(--line); background: var(--surface); font-size: 20px; line-height: 1 }
+.step b { width: 24px; text-align: center }
+
+/* dock */
+.dock { position: fixed; z-index: 10; left: 50%; transform: translateX(-50%); bottom: var(--kb); width: 100%; max-width: 480px; background: var(--surface); border-top: 1px solid var(--line); padding: 10px 16px calc(12px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 10px; box-shadow: 0 -4px 18px rgba(0, 0, 0, .06) }
+.ctl { display: flex; gap: 8px; align-items: center }
+.fchip { flex: 1; min-width: 0; height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 10px; border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); font-size: 13px; font-weight: 600; text-align: left }
+.fchip .sw-img { width: 24px; height: 24px; border-radius: 4px; flex: none; display: block; object-fit: cover; background: var(--field); border: 1px dashed var(--line) }
+.fchip .nm { min-width: 0; display: flex; flex-direction: column; line-height: 16px }
+.fchip .nm small { font-size: 11px; font-weight: 500; color: var(--muted) }
+.fchip .nm span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.cats { display: flex; gap: 4px; flex: none }
+.cats button { width: 38px; height: 44px; border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); font-size: 15px; font-weight: 600 }
+.cats button.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink) }
+.srch { display: flex; gap: 12px; align-items: center }
+.field { flex: 1; min-width: 0; height: 52px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1.5px solid var(--line); border-radius: var(--r); background: var(--surface) }
+.field:focus-within { border-color: var(--accent) }
+.field svg { flex: none; color: var(--muted) }
+.field input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 16px; height: 100% }
+.field .fake { flex: 1; min-width: 0; color: var(--muted); font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left }
+.clear { width: 28px; height: 28px; border: 0; border-radius: 50%; background: var(--field); color: var(--muted); font-size: 16px; line-height: 1; flex: none }
+.qrbig { width: 64px; height: 64px; flex: none; border: 0; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; box-shadow: 0 6px 16px var(--qr-glow) }
+.acts { display: flex; gap: 10px }
+.btn { flex: 1; min-width: 0; height: 52px; border-radius: var(--r); border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 13px; white-space: nowrap; padding: 0 12px }
+.btn.ghost { background: var(--surface); color: var(--accent) }
+.btn.flex0 { flex: 0 0 auto }
+.btn:disabled { opacity: .45 }
 
 /* sheets and overlay */
 .shade { position: fixed; inset: 0; background: var(--shade); z-index: 20; display: flex; align-items: flex-end; justify-content: center }
@@ -153,46 +159,60 @@ mark { background: var(--accent-soft); color: inherit; border-radius: 2px; paddi
 .sheet .sh { padding: 14px 16px 10px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px }
 .sheet .sh h3 { margin: 0; font-size: 16px; flex: 1 }
 .sheet .sb { overflow: auto; padding: 12px 16px 18px }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 10px }
-.fab { border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); padding: 6px; text-align: left; font-size: 11px; line-height: 1.25 }
-.fab .sw-img { width: 100%; height: auto; aspect-ratio: 1; border-radius: 4px; display: block; margin-bottom: 5px }
+.sheet .field { height: 48px }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px }
+.fab { border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); padding: 6px; text-align: left; font-size: 11px; line-height: 1.3; display: flex; flex-direction: column; gap: 4px }
+.fab img, .fab .ph { width: 100%; aspect-ratio: 1; border-radius: 4px; display: block; object-fit: cover; background: var(--field) }
 .fab.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) }
-.fab em { font-style: normal; color: var(--muted); display: block }
+.fab em { font-style: normal; color: var(--muted) }
+.cam { position: relative; width: 100%; aspect-ratio: 1; max-height: 52vh; background: #000; border-radius: var(--r); overflow: hidden; display: grid; place-items: center }
+.cam video { width: 100%; height: 100%; object-fit: cover; display: block }
+.cam .frame { position: absolute; inset: 16%; border: 3px solid #fff; border-radius: 14px; box-shadow: 0 0 0 999px rgba(0, 0, 0, .35); pointer-events: none }
+.cam .wait { position: absolute; color: #fff; font-size: 13px; padding: 16px; text-align: center }
+.cammsg { font-size: 13px; color: var(--muted); margin: 10px 0 14px }
+.cammsg.err { color: var(--warn) }
 
 .client { position: fixed; inset: 0; z-index: 30; background: var(--surface); overflow: auto }
-.client .in { max-width: 480px; margin: 0 auto; padding: 18px 16px 110px }
-.client .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: .14em; font-size: 13px }
-.client .pic { margin-top: 16px; background: var(--scheme); border-radius: var(--r); display: grid; place-items: center; padding: 14px; border: 1px solid var(--line) }
-.client .pic img { max-height: 240px; width: auto; max-width: 100% }
+.client .in { max-width: 480px; margin: 0 auto; padding: 20px 20px 120px; display: flex; flex-direction: column; gap: 18px }
+.client .brand img { height: 30px; width: auto; display: block }
+.client .brand .dark { display: none; height: 44px }
+.client .pic { background: var(--scheme); border: 1px solid var(--line); border-radius: var(--r); display: grid; place-items: center; padding: 14px; min-height: 160px }
+.client .pic img { max-height: 220px; width: auto; max-width: 100%; display: block }
 .client .pic.photo { padding: 0; overflow: hidden }
 .client .pic.photo img { width: 100%; max-height: 300px; object-fit: cover }
-.client h2 { font-size: 22px; margin: 18px 0 4px; text-wrap: balance }
-.client .lines { margin-top: 12px; display: grid; gap: 6px; font-size: 14px }
-.client .lines div { display: flex; justify-content: space-between; gap: 10px }
-.client .lines div span:last-child { white-space: nowrap }
-.client .sum { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 14px }
-.client .sum .big { font-size: 38px; font-weight: 700; letter-spacing: -.01em }
-.client .fine { font-size: 12px; color: var(--muted); margin-top: 8px }
-.client .timer { margin-top: 14px; background: var(--ok-soft); color: var(--ok); border-radius: var(--r); padding: 10px 12px; font-weight: 600; font-size: 14px }
+.client h2 { font-size: 26px; line-height: 32px; margin: 0 }
+.client .sub { font-size: 14px; color: var(--muted); margin-top: 4px }
+.client .lines { font-size: 15px }
+.client .lines .v { font-weight: 500 }
+.client .fabric { display: flex; align-items: center; gap: 10px; font-size: 15px }
+.client .fabric img { width: 32px; height: 32px; border-radius: 4px; object-fit: cover }
+.client .sum { border-top: 1px solid var(--line); padding-top: 16px; display: flex; flex-direction: column; gap: 6px }
+.client .sum b { font-size: 42px; line-height: 48px; letter-spacing: -.01em }
+.client .fine { font-size: 12px; line-height: 17px; color: var(--muted) }
+.client .timer { display: flex; align-items: center; gap: 8px; background: var(--ok-soft); color: var(--ok); border-radius: var(--r); padding: 10px 12px; font-weight: 600; font-size: 14px }
+.actions { position: fixed; z-index: 31; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: var(--surface); border-top: 1px solid var(--line); padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 10px }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .client .brand .light { display: none } :root:not([data-theme="light"]) .client .brand .dark { display: block } }
+:root[data-theme="dark"] .client .brand .light { display: none }
+:root[data-theme="dark"] .client .brand .dark { display: block }
 
-.toast { position: fixed; z-index: 40; left: 50%; bottom: 92px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: var(--r); font-size: 13px; max-width: calc(100% - 32px); width: max-content; box-shadow: 0 6px 18px rgba(0,0,0,.18) }
+.toast { position: fixed; z-index: 40; left: 50%; bottom: calc(var(--dock-h) + var(--kb) + 12px); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: var(--r); font-size: 13px; max-width: calc(100% - 32px); width: max-content; box-shadow: 0 6px 18px rgba(0,0,0,.18) }
 
 /* nonstandard */
-.ans { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px; display: grid; gap: 6px }
-.ans .q { font-weight: 600 }
+.ans { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px; display: flex; flex-direction: column; gap: 6px }
+.ans .q { font-weight: 600; font-size: 14px }
 .ans .a { font-size: 14px }
 .ans .d { font-size: 12px; color: var(--muted); display: flex; gap: 8px; justify-content: space-between; align-items: center; flex-wrap: wrap }
 .ex { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--warn); background: var(--warn-soft); border-radius: 3px; padding: 2px 6px; font-weight: 600 }
-.form { display: grid; gap: 12px }
-.form label { font-size: 12px; color: var(--muted); display: grid; gap: 6px }
-.form input[type=text], .form input[type=tel], .form textarea { border: 1.5px solid var(--line); background: var(--surface); border-radius: var(--r); padding: 11px 12px; font-size: 15px; width: 100% }
+.form { display: flex; flex-direction: column; gap: 12px }
+.form label { font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 6px }
+.form input[type=text], .form input[type=tel], .form textarea { border: 1.5px solid var(--line); background: var(--surface); border-radius: var(--r); padding: 11px 12px; font-size: 16px; width: 100% }
 .form textarea { min-height: 76px; resize: vertical }
 .form input:focus, .form textarea:focus { outline: 0; border-color: var(--accent) }
-.toggle { display: flex !important; grid-template-columns: none; align-items: center; justify-content: space-between; gap: 10px; background: var(--accent-soft); border-radius: var(--r); padding: 12px; color: var(--ink) !important; font-size: 14px !important; font-weight: 600 }
+.form label.toggle { flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; background: var(--accent-soft); border-radius: var(--r); padding: 12px; color: var(--ink); font-size: 14px; font-weight: 600 }
 .toggle input { width: 22px; height: 22px; accent-color: var(--accent) }
-.base { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; font-size: 13px; display: flex; justify-content: space-between; gap: 10px }
+.base { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; font-size: 13px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px }
 .base b { white-space: nowrap }
-.req { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: grid; gap: 10px }
+.req { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: flex; flex-direction: column; gap: 12px }
 .steps { display: grid; gap: 8px; font-size: 13px }
 .steps div { display: flex; gap: 8px; align-items: center; color: var(--muted) }
 .steps div i { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--line); flex: none }
@@ -200,14 +220,7 @@ mark { background: var(--accent-soft); color: inherit; border-radius: 2px; paddi
 .steps div.done i { background: var(--ok); border-color: var(--ok) }
 .steps div.now { color: var(--ink); font-weight: 600 }
 .steps div.now i { border-color: var(--accent); background: var(--accent-soft) }
-.note { font-size: 12px; color: var(--muted); padding: 18px 16px 0; line-height: 1.5 }
 .upl { display: flex; gap: 10px; align-items: center }
-.cam { position: relative; width: 100%; aspect-ratio: 1; max-height: 52vh; background: #000; border-radius: var(--r); overflow: hidden; display: grid; place-items: center }
-.cam video { width: 100%; height: 100%; object-fit: cover; display: block }
-.cam .frame { position: absolute; inset: 16%; border: 3px solid #fff; border-radius: 14px; box-shadow: 0 0 0 999px rgba(0, 0, 0, .35); pointer-events: none }
-.cam .wait { position: absolute; color: #fff; font-size: 13px; padding: 16px; text-align: center }
-.cammsg { font-size: 13px; color: var(--muted); margin: 10px 0 14px }
-.cammsg.err { color: var(--warn) }
 .upl img { width: 54px; height: 54px; object-fit: cover; border-radius: 4px }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -221,6 +234,7 @@ mark { background: var(--accent-soft); color: inherit; border-radius: 2px; paddi
 </style>
 
 <div id="app"></div>
+<div id="dock"></div>
 <div id="layer"></div>
 
 <script src="data.js"></script>
@@ -228,6 +242,7 @@ mark { background: var(--accent-soft); color: inherit; border-radius: 2px; paddi
 (() => {
 const D = window.PRICE_DATA;
 const $app = document.getElementById('app');
+const $dock = document.getElementById('dock');
 const $layer = document.getElementById('layer');
 
 /* ---------- helpers ---------- */
@@ -235,19 +250,21 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;
 const rub = n => n.toLocaleString('ru-RU').replace(/,/g, ' ') + ' ₽';
 const lowerFirst = s => s ? s[0].toLowerCase() + s.slice(1) : s;
 const mmss = ms => { const s = Math.max(0, Math.round(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const plural = (n, one, few, many) => { const a = n % 10, b = n % 100; return a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many; };
 const store = { get(k, d) { try { const v = localStorage.getItem('pl_' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
                 set(k, v) { try { localStorage.setItem('pl_' + k, JSON.stringify(v)); } catch (e) {} } };
 const TODAY = new Date().toLocaleDateString('ru-RU');
 const PRICE_LABEL = `Прайс ${D.price.factory} от ${D.price.label}`;
+const LOGO_MARK = 'img/logo-mark.png', LOGO_FULL = 'img/logo-full.png';
 
 const ICON = {
   search: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
-  qr: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg>',
+  qr: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg>',
+  qrs: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg>',
   back: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m15 18-6-6 6-6"/></svg>',
-  timer: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>',
+  timer: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>',
   check: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5 9-10"/></svg>',
-  plus: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>',
-  info: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg>',
+  plus: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>',
 };
 
 /* ---------- data ---------- */
@@ -260,6 +277,7 @@ const FABS = D.fabrics;
 const priceAt = (p, cat) => p.length > 1 ? p[cat - 1] : p[0];
 const cfgTitle = c => `${c.series}, ${lowerFirst(c.shape)}`;
 const cfgDims = c => c.dims.replace(/×/g, ' × ') + ' см';
+const leadText = s => String(s || '').replace('нед.', 'недель');
 
 /* Factory answers on nonstandard requests. Examples for the demo, not real factory answers. */
 const ANSWERS = [
@@ -271,7 +289,7 @@ const ANSWERS = [
   { series: '*', q: 'Ткань клиента вместо ткани из каталога', kind: 'pct', v: -8, lead: '+1 неделя к сроку', date: '11.09.2026', words: 'своя ткань клиента com материал заказчика' },
 ];
 
-/* Floor samples with a QR sticker (the camera is simulated in the prototype) */
+/* Floor samples with a QR sticker. Same list as tools/build_qr.py */
 const FLOOR = [
   { type: 'cfg', id: 'BB-01', place: 'Зал 1, у окна' },
   { type: 'cfg', id: 'CU-22', place: 'Зал 1, центр' },
@@ -352,7 +370,6 @@ function tokScore(alts, it) {
 }
 function search(q) {
   const { toks, width } = parseQuery(q);
-  // "bon bon" typed as one word or with a space should both hit Bon Bon
   const joined = lat(q).replace(/[^a-z]/g, '');
   const out = [];
   for (const it of INDEX) {
@@ -376,6 +393,7 @@ const st = {
   q: '', group: 'Все', cat: store.get('cat', 1), fabric: store.get('fabric', null),
   stack: [{ v: 'home' }], sw: { start: null }, reqs: [], build: null, upload: null,
 };
+if (st.fabric != null && !FABS[st.fabric]) st.fabric = null;
 const view = () => st.stack[st.stack.length - 1];
 function go(v) { st.stack.push(v); render(); window.scrollTo(0, 0); }
 function back() { if (st.stack.length > 1) st.stack.pop(); render(); window.scrollTo(0, 0); }
@@ -400,7 +418,7 @@ function toast(msg) {
 let swTick;
 function swToggle() {
   if (st.sw.start) { st.sw.start = null; clearInterval(swTick); renderSw(); toast('Секундомер сброшен'); return; }
-  st.sw.start = Date.now(); st.sw.result = null; toast('Секундомер пошёл. Найдите цену и нажмите «Показать клиенту»');
+  st.sw.start = Date.now(); toast('Секундомер пошёл. Найдите цену и нажмите «Показать клиенту»');
   clearInterval(swTick); swTick = setInterval(renderSw, 500); renderSw();
 }
 function swStop() {
@@ -409,48 +427,77 @@ function swStop() {
 }
 function swHtml() {
   return st.sw.start
-    ? `<button class="icon-btn sw run num" data-act="sw" aria-label="Сбросить секундомер">${ICON.timer}${mmss(Date.now() - st.sw.start)}</button>`
-    : `<button class="icon-btn sw" data-act="sw" aria-label="Засечь время">${ICON.timer}Засечь</button>`;
+    ? `<button class="sw run num" data-act="sw" aria-label="Сбросить секундомер">${ICON.timer}${mmss(Date.now() - st.sw.start)}</button>`
+    : `<button class="sw" data-act="sw" aria-label="Засечь время">${ICON.timer}</button>`;
 }
 function renderSw() { document.querySelectorAll('.sw').forEach(b => b.outerHTML = swHtml()); }
 
-/* ---------- pieces ---------- */
-function fabBar() {
+/* ---------- dock: fabric + category, then search + QR or the screen's actions ---------- */
+function ctlHtml() {
   const f = fab();
-  return `<button class="fabbar" data-act="fabrics">
-    <span class="sw-img" style="${f && f.img ? `background-image:url(${f.img})` : ''}"></span>
-    <span class="grow">${f ? `Ткань <b>${esc(f.name)}</b> · кат. ${f.cat}` : `Ткань не выбрана · цены по <b>кат. ${st.cat}</b>`}</span>
-    <span class="lnk">${f ? 'Сменить' : 'Выбрать'}</span></button>`;
+  return `<div class="ctl">
+    <button class="fchip" data-act="fabrics" aria-label="Ткань клиента">${f && f.img ? `<img class="sw-img" src="${f.img}" alt="">` : '<span class="sw-img"></span>'}
+      <span class="nm"><small>Ткань</small><span>${f ? esc(f.name) : 'выбрать'}</span></span></button>
+    <div class="cats" role="group" aria-label="Категория ткани">${[1,2,3,4,5].map(k =>
+      `<button class="${k === st.cat ? 'on' : ''}" data-act="cat" data-k="${k}" aria-pressed="${k === st.cat}" aria-label="Категория ${k}">${k}</button>`).join('')}</div>
+  </div>`;
 }
-function catSeg() {
-  return `<div class="seg" role="group" aria-label="Категория ткани">${[1,2,3,4,5].map(k =>
-    `<button class="${k === st.cat ? 'on' : ''}" data-act="cat" data-k="${k}" aria-pressed="${k === st.cat}">${k}</button>`).join('')}</div>`;
+function searchRow(live) {
+  const field = live
+    ? `<label class="field" for="q">${ICON.search}<input id="q" type="search" placeholder="Модель, размер, ткань" autocomplete="off" value="${esc(st.q)}" enterkeyhint="search"><button class="clear" data-act="clear" aria-label="Очистить" ${st.q ? '' : 'hidden'}>×</button></label>`
+    : `<button class="field" data-act="tosearch">${ICON.search}<span class="fake">Модель, размер, ткань</span></button>`;
+  return `<div class="srch">${field}<button class="qrbig" data-act="qr" aria-label="Сканировать QR на образце">${ICON.qr}</button></div>`;
 }
+function dockHtml(v) {
+  let bottom;
+  if (v.v === 'home') bottom = searchRow(true);
+  else if (v.v === 'series') bottom = searchRow(false);
+  else if (v.v === 'cfg') bottom = `<div class="acts"><button class="btn" data-act="client" data-base="cfg:${v.id}">Показать клиенту</button></div>`;
+  else if (v.v === 'prod') bottom = `<div class="acts"><button class="btn" data-act="client" data-base="prod:${v.id}">Показать клиенту</button></div>`;
+  else if (v.v === 'build') { const any = Object.values(st.build.items).some(n => n > 0);
+    bottom = `<div class="acts"><button class="btn" data-act="client" data-base="build:${esc(v.id)}" ${any ? '' : 'disabled'}>Показать клиенту</button></div>`; }
+  else if (v.v === 'nonstd') bottom = `<div class="acts"><button class="btn" data-act="send">Отправить закупщику</button></div>`;
+  else if (v.v === 'req') { const r = st.reqs.find(x => x.no === v.id);
+    bottom = `<div class="acts">${r && r.base && r.base.price != null ? `<button class="btn ghost" data-act="client" data-base="${esc(r.baseKey)}">Цена основы</button>` : ''}<button class="btn" data-act="home">К поиску</button></div>`; }
+  return `<div class="dock">${ctlHtml()}${bottom || ''}</div>`;
+}
+function measureDock() {
+  const d = $dock.firstElementChild;
+  if (d) document.documentElement.style.setProperty('--dock-h', d.offsetHeight + 'px');
+}
+/* keep the dock above the on-screen keyboard (iOS Safari does not resize the layout viewport) */
+function fitKeyboard() {
+  const vv = window.visualViewport; if (!vv) return;
+  const off = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+  document.documentElement.style.setProperty('--kb', off + 'px');
+}
+if (window.visualViewport) { visualViewport.addEventListener('resize', fitKeyboard); visualViewport.addEventListener('scroll', fitKeyboard); }
+
+/* ---------- pieces ---------- */
 function rowCfg(c) {
   return `<button class="row" data-act="cfg" data-id="${c.id}">
-    <span class="pic" style="background-image:url(${c.img})"></span>
-    <span class="txt"><span class="t">${esc(cfgTitle(c))}</span><span class="s">${esc(cfgDims(c))} · ${esc(c.lead)}</span></span>
-    <span class="pr"><b class="num">${rub(c.p[st.cat - 1])}</b><small>кат. ${st.cat}</small></span></button>`;
+    <span class="txt"><span class="p num">${rub(c.p[st.cat - 1])}</span><span class="t">${esc(cfgTitle(c))} ${esc(c.dims.replace(/×/g, ' × '))}</span><span class="s">${esc(leadText(c.lead))}</span></span>
+    <img class="pic" src="${c.img}" alt="" loading="lazy"></button>`;
 }
 function rowProd(p) {
   return `<button class="row" data-act="prod" data-id="${p.sku}">
-    <span class="pic photo" style="background-image:url(${p.photo})"></span>
-    <span class="txt"><span class="t">${esc(p.name)}</span><span class="s">${esc(p.dims ? p.dims + ' · ' : '')}${esc(p.lead)}</span></span>
-    <span class="pr"><b class="num">${rub(priceAt(p.p, st.cat))}</b><small>${p.cats ? 'кат. ' + st.cat : 'цена'}</small></span></button>`;
+    <span class="txt"><span class="p num">${rub(priceAt(p.p, st.cat))}</span><span class="t">${esc(p.name)}</span><span class="s">${esc([p.dims, leadText(p.lead)].filter(Boolean).join(' · '))}</span></span>
+    <img class="pic photo" src="${p.photo}" alt="" loading="lazy"></button>`;
 }
 function rowFab(i) {
   const f = FABS[i];
-  return `<button class="row" data-act="setfab" data-i="${i}">
-    <span class="pic photo" style="${f.img ? `background-image:url(${f.img})` : ''}"></span>
-    <span class="txt"><span class="t">${esc(f.name)}</span><span class="s">${esc(f.kind)} · коллекция ${esc(f.coll)}</span></span>
-    <span class="pr"><b>кат. ${f.cat}</b><small>выбрать</small></span></button>`;
+  return `<button class="row fabric" data-act="setfab" data-i="${i}">
+    <span class="txt"><span class="t">${esc(f.name)}</span><span class="s">${esc(f.kind)}, категория ${f.cat}</span><span class="lnk">Выбрать эту ткань</span></span>
+    ${f.img ? `<img class="pic photo" src="${f.img}" alt="">` : ''}</button>`;
 }
-function seriesCard(s) {
-  const from = Math.min(...D.cfgs.filter(c => c.series === s.name).map(c => c.p[st.cat - 1]));
-  return `<button class="scard" data-act="series" data-id="${esc(s.name)}">
-    <img src="${s.photo}" alt="${esc(s.name)}" loading="lazy">
-    <span class="cap"><span><b>${esc(s.name)}</b><span>${esc(s.tag)}</span></span><span class="from num">от ${rub(from)}</span></span></button>`;
+function seriesRow(s) {
+  const list = D.cfgs.filter(c => c.series === s.name);
+  const from = Math.min(...list.map(c => c.p[st.cat - 1]));
+  return `<button class="srow" data-act="series" data-id="${esc(s.name)}">
+    <img src="${s.photo}" alt="" loading="lazy">
+    <span class="txt"><span class="t">${esc(s.name)}</span><span class="s">${list.length} ${plural(list.length, 'готовая компоновка', 'готовые компоновки', 'готовых компоновок')}</span><span class="p num">от ${rub(from)}</span></span></button>`;
 }
+function srcHtml() { return `<div class="src">${ICON.check}<span>Посчитано системой по прайсу ${esc(D.price.factory)} от ${esc(D.price.label)}</span></div>`; }
 
 /* ---------- views ---------- */
 const GROUPS = ['Все', 'Диваны', 'Кресла', 'Пуфы', 'Стулья', 'Столы', 'Хранение', 'Декор'];
@@ -458,48 +505,40 @@ const QUICK = ['бон бон дуга', 'bonbon 3 м', 'кубик с шезл�
 
 function homeBody() {
   const q = st.q.trim();
-  let body = '';
-  const reqs = st.reqs.length ? `<div class="sec"><h2>Мои запросы в закупки</h2><div class="list">${st.reqs.map(r =>
-      `<button class="row" data-act="req" data-id="${r.no}"><span class="txt"><span class="t">${esc(r.no)} · ${esc(r.title)}</span><span class="s">${esc(reqStage(r).label)}</span></span><span class="pr"><small class="num">${mmss(Date.now() - r.ts)}</small></span></button>`).join('')}</div></div>` : '';
+  const reqs = st.reqs.length ? `<div class="sec"><div class="cap">Мои запросы в закупки</div><div class="list">${st.reqs.map(r =>
+      `<button class="row" data-act="req" data-id="${r.no}"><span class="txt"><span class="t">${esc(r.no)} · ${esc(r.title)}</span><span class="s">${esc(reqStage(r).label)} · ${mmss(Date.now() - r.ts)}</span></span></button>`).join('')}</div></div>` : '';
+  const nonstd = `<div class="sec"><button class="ghost-btn accent" data-act="nonstd">${ICON.plus}Нет в каталоге?</button></div>`;
   if (q) {
     let res = search(q);
     if (st.group !== 'Все') res = res.filter(it => (it.kind === 'prod' && PROD[it.id].group === st.group) || (st.group === 'Диваны' && (it.kind === 'cfg' || it.kind === 'series')));
     const ser = res.filter(i => i.kind === 'series'), cf = res.filter(i => i.kind === 'cfg'), pr = res.filter(i => i.kind === 'prod'), fb = res.filter(i => i.kind === 'fab');
-    if (!res.length) {
-      body = `<div class="empty"><b>Ничего не нашлось по «${esc(q)}»</b>Проверьте написание или спросите закупки: это может быть нестандарт.</div>
-        <button class="nonstd" data-act="nonstd">${ICON.plus}<span>Нет в каталоге? Ответы фабрики и запрос в закупки</span></button>`;
-    } else {
-      if (ser.length && !cf.length) body += `<div class="sec"><h2>Серии</h2><div class="series">${ser.slice(0, 3).map(i => seriesCard(SER[i.id])).join('')}</div></div>`;
-      if (cf.length) body += `<div class="sec"><h2><span>Готовые компоновки</span><span class="num">${cf.length}</span></h2><div class="list">${cf.slice(0, 12).map(i => rowCfg(CFG[i.id])).join('')}</div>
-        ${cf.length > 12 ? `<button class="lnk" style="margin-top:10px" data-act="series" data-id="${esc(CFG[cf[0].id].series)}">Все компоновки ${esc(CFG[cf[0].id].series)} →</button>` : ''}</div>`;
-      if (pr.length) body += `<div class="sec"><h2><span>Товары</span><span class="num">${pr.length}</span></h2><div class="list">${pr.slice(0, 20).map(i => rowProd(PROD[i.id])).join('')}</div></div>`;
-      if (fb.length) body += `<div class="sec"><h2><span>Ткани</span><span class="num">${fb.length}</span></h2><div class="list">${fb.slice(0, 6).map(i => rowFab(i.id)).join('')}</div></div>`;
-      body += `<button class="nonstd" data-act="nonstd">${ICON.plus}<span>Клиент хочет то, чего нет в каталоге?</span></button>`;
-    }
-  } else if (st.group !== 'Все') {
-    if (st.group === 'Диваны') body = `<div class="sec"><h2>Модульные диваны</h2><div class="series">${D.series.map(seriesCard).join('')}</div></div>`;
-    const items = D.products.filter(p => p.group === st.group);
-    if (items.length) body += `<div class="sec"><h2><span>${esc(st.group)}</span><span class="num">${items.length}</span></h2><div class="list">${items.map(rowProd).join('')}</div></div>`;
-  } else {
-    body = `${reqs}
-      <div class="sec"><h2>Модульные диваны</h2><div class="series">${D.series.map(seriesCard).join('')}</div></div>
-      <div class="sec"><h2>Попробуйте найти</h2><div class="quick">${QUICK.map(t => `<button data-act="quick" data-q="${esc(t)}">${esc(t)}</button>`).join('')}</div></div>
-      <div class="sec"><h2>В каталоге</h2><div class="quick">${GROUPS.slice(1).map(g => {
-        const n = g === 'Диваны' ? D.cfgs.length + ' компоновок' : D.products.filter(p => p.group === g).length;
-        return `<button data-act="group" data-g="${g}">${g} · ${n}</button>`; }).join('')}</div></div>
-      <button class="nonstd" data-act="nonstd">${ICON.plus}<span>Нет в каталоге? Ответы фабрики и запрос в закупки</span></button>
-      <p class="note">Прототип для встречи. Цены — розница Saloni по формуле портала закупок, исходные цифры с сайта alikahome.ru (сентябрь 2026). Категории тканей условные, ответы фабрики — примеры. <button class="lnk" data-act="about">Подробнее</button></p>`;
+    const n = cf.length + pr.length + (cf.length ? 0 : ser.length);
+    if (!res.length) return `${reqs}<div class="sec"><div class="empty"><b>Ничего не нашлось по «${esc(q)}»</b>Проверьте написание. Если такого нет в каталоге, это нестандарт: спросите закупки.</div></div>${nonstd}`;
+    let body = '';
+    if (n) body += `<div class="sec"><div class="cap">«${esc(q)}» · ${n} ${plural(n, 'результат', 'результата', 'результатов')}</div><div class="list">
+      ${!cf.length ? ser.slice(0, 3).map(i => seriesRow(SER[i.id])).join('') : ''}
+      ${cf.slice(0, 15).map(i => rowCfg(CFG[i.id])).join('')}
+      ${pr.slice(0, 20).map(i => rowProd(PROD[i.id])).join('')}</div>
+      ${cf.length > 15 ? `<button class="ghost-btn" style="margin-top:10px" data-act="series" data-id="${esc(CFG[cf[0].id].series)}">Все компоновки ${esc(CFG[cf[0].id].series)}</button>` : ''}</div>`;
+    if (fb.length) body += `<div class="sec"><div class="cap">Ткани · ${fb.length}</div><div class="list">${fb.slice(0, 6).map(i => rowFab(i.id)).join('')}</div></div>`;
+    return reqs + body + nonstd;
   }
-  if (q && reqs) body = reqs + body;
-  return body;
+  if (st.group !== 'Все') {
+    let body = '';
+    if (st.group === 'Диваны') body += `<div class="sec"><div class="cap">Модульные диваны</div><div class="list">${D.series.map(seriesRow).join('')}</div></div>`;
+    const items = D.products.filter(p => p.group === st.group);
+    if (items.length) body += `<div class="sec"><div class="cap">${esc(st.group)} · ${items.length}</div><div class="list">${items.map(rowProd).join('')}</div></div>`;
+    return body;
+  }
+  return `${reqs}
+    <div class="sec"><div class="cap">Модульные диваны</div><div class="list">${D.series.map(seriesRow).join('')}</div></div>
+    <div class="sec"><div class="cap">Попробуйте найти</div><div class="quick">${QUICK.map(t => `<button data-act="quick" data-q="${esc(t)}">${esc(t)}</button>`).join('')}</div></div>
+    ${nonstd}
+    <p class="note">Прототип. Цены — розница Saloni по формуле портала закупок, исходные цифры с сайта alikahome.ru (сентябрь 2026). Категории тканей условные, ответы фабрики — примеры. <button class="lnk" data-act="about">Подробнее</button></p>`;
 }
 function vHome() {
-  return `<header class="top">
-      <div class="brand"><span class="mark">AH</span><span class="grow"><h1>Цена в салоне</h1><span class="status"><i></i>${esc(PRICE_LABEL)} · действует</span></span>${swHtml()}</div>
-      <div class="search"><label class="field" for="q">${ICON.search}<input id="q" type="search" placeholder="Модель, серия, размер, ткань" autocomplete="off" value="${esc(st.q)}" enterkeyhint="search"><button class="clear" data-act="clear" aria-label="Очистить" ${st.q ? '' : 'hidden'}>×</button></label>
-      <button class="qr" data-act="qr" aria-label="Сканировать QR на образце">${ICON.qr}</button></div>
-      ${fabBar()}
-    </header>
+  return `<header class="head"><img class="logo" src="${LOGO_MARK}" alt="Alika Home">
+      <span class="ttl"><b>Цена в салоне</b><span class="status">${esc(PRICE_LABEL)}</span></span>${swHtml()}</header>
     <nav class="chips" aria-label="Разделы">${GROUPS.map(g => `<button class="chip ${g === st.group ? 'on' : ''}" data-act="group" data-g="${g}">${g}</button>`).join('')}</nav>
     <div id="results">${homeBody()}</div>`;
 }
@@ -507,9 +546,8 @@ function updateResults() {
   const r = document.getElementById('results'); if (r) r.innerHTML = homeBody();
   const c = document.querySelector('.clear'); if (c) c.hidden = !st.q;
 }
-
 function barHtml(title) {
-  return `<div class="bar"><button class="back" data-act="back">${ICON.back}Назад</button><h1>${esc(title)}</h1>${swHtml()}</div>`;
+  return `<div class="bar"><button class="back" data-act="back">${ICON.back}Назад</button><span class="title">${esc(title)}</span>${swHtml()}</div>`;
 }
 
 function vSeries(name) {
@@ -521,53 +559,54 @@ function vSeries(name) {
   const extra = D.products.filter(p => p.series === name);
   const mods = Object.values(MODS).filter(m => m.series === name);
   return `${barHtml(name)}
-    <div class="hero photo"><img src="${s.photo}" alt="${esc(name)}"></div>
-    <div class="head"><h2>${esc(name)}</h2><div class="meta"><span class="tag">${cfgs.length} компоновок</span><span class="tag">${mods.length} модулей</span><span class="tag ok">${esc(PRICE_LABEL)}</span></div>
-      <div class="lbl"><span>Категория ткани</span></div>${catSeg()}${fabBar()}</div>
+    <div class="hero"><img src="${s.photo}" alt="${esc(name)} в интерьере"></div>
+    <div class="sec stack"><h1 style="margin:0;font-size:22px;line-height:28px">${esc(name)}</h1>
+      <span style="font-size:14px;color:var(--muted)">${esc(s.tag)}</span>
+      <button class="ghost-btn" data-act="build" data-id="${esc(name)}">${ICON.plus}Собрать свою компоновку</button></div>
     <nav class="chips">${shapes.map(x => `<button class="chip ${x === sh ? 'on' : ''}" data-act="shape" data-s="${esc(x)}">${esc(x)}</button>`).join('')}</nav>
-    <div class="sec"><h2><span>Готовые компоновки</span><span class="num">${list.length}</span></h2><div class="list">${list.map(rowCfg).join('')}</div></div>
-    ${extra.length ? `<div class="sec"><h2>В этой серии</h2><div class="list">${extra.map(rowProd).join('')}</div></div>` : ''}
-    <div class="sec"><h2>Модули по отдельности</h2><div class="list">${mods.map(m => `<div class="mod"><span class="pic" style="background-image:url(${m.photo})"></span><span class="txt"><b>${esc(m.name)}</b><span>${m.w} × ${m.d} см · ${esc(m.lead)}</span></span><b class="num">${rub(priceAt(m.p, st.cat))}</b></div>`).join('')}</div></div>
-    <button class="nonstd" data-act="nonstd" data-base="series:${esc(name)}">${ICON.plus}<span>Нужно не как в каталоге?</span></button>
-    <div class="actions"><button class="btn" data-act="build" data-id="${esc(name)}">Собрать свою компоновку</button></div>`;
+    <div class="sec"><div class="cap">Готовые компоновки · ${list.length}</div><div class="list">${list.map(rowCfg).join('')}</div></div>
+    ${extra.length ? `<div class="sec"><div class="cap">В этой серии</div><div class="list">${extra.map(rowProd).join('')}</div></div>` : ''}
+    <div class="sec"><div class="cap">Модули по отдельности</div><div class="list">${mods.map(m => `<div class="mod"><img src="${m.photo}" alt="" loading="lazy"><span class="txt"><b>${esc(m.name)}</b><span class="num">${m.w} × ${m.d} см · ${rub(priceAt(m.p, st.cat))}</span></span></div>`).join('')}</div></div>
+    <div class="sec"><button class="ghost-btn accent" data-act="nonstd" data-base="series:${esc(name)}">${ICON.plus}Нужно не как в каталоге?</button></div>`;
 }
 
-function whyHtml(lines, cat, total) {
-  return `<div class="why">${lines.map(l => `<div><span>${esc(l[0])}</span><span class="num">${l[1]}</span></div>`).join('')}
-    <div><span>Категория ткани</span><span>${cat}${fab() ? ' · ' + esc(fab().name) : ''}</span></div></div>
-    <div class="src">${ICON.check}<span>Посчитано системой по: ${esc(PRICE_LABEL)}, версия ${D.price.version}</span></div>`;
-}
 function compLines(comp, cat) {
   return comp.map(([mid, n]) => { const m = MODS[mid]; const p = priceAt(m.p, cat);
     return [`${m.name}${n > 1 ? ' × ' + n : ''}`, rub(p * n)]; });
+}
+function linesHtml(lines) { return lines.map(l => `<span>${esc(l[0])}</span><span class="v num">${l[1]}</span>`).join(''); }
+function fabricLine() {
+  const f = fab();
+  return `<span class="m">${f ? `Ткань ${esc(f.name)}, категория ${f.cat}` : `Ткань категории ${st.cat}`}</span><span class="m" style="text-align:right">в цене</span>`;
 }
 
 function vCfg(id) {
   const c = CFG[id];
   return `${barHtml(c.series)}
-    <div class="hero"><img src="${c.img}" alt="Схема: ${esc(cfgTitle(c))}"></div>
-    <div class="head"><h2>${esc(cfgTitle(c))}</h2>
-      <div class="meta"><span class="tag">${esc(cfgDims(c))}</span><span class="tag">${esc(c.lead)}</span><span class="tag">схема из каталога Saloni</span></div>
-      <div class="lbl"><span>Категория ткани</span></div>${catSeg()}${fabBar()}
-      <div class="price"><div class="cap">Розница, категория ${st.cat}</div><div class="big num">${rub(c.p[st.cat - 1])}</div>
-        ${whyHtml(compLines(c.comp, st.cat), st.cat)}</div></div>
-    <button class="nonstd" data-act="nonstd" data-base="cfg:${c.id}">${ICON.plus}<span>Клиент хочет иначе, чем в каталоге?</span></button>
-    <div class="actions"><button class="btn ghost flex0" data-act="build" data-id="${esc(c.series)}" data-from="${c.id}">Изменить</button><button class="btn" data-act="client" data-base="cfg:${c.id}">Показать клиенту</button></div>`;
+    <div class="sec stack" style="gap:14px">
+      <div class="summary"><div class="box"><img src="${c.img}" alt="Схема из каталога"></div>
+        <div class="txt"><h1>${esc(cfgTitle(c))}</h1><span>${esc(cfgDims(c))}</span><span>${esc(leadText(c.lead))}</span></div></div>
+      <div class="rcpt"><div class="cap">Из чего цена</div>
+        <div class="lines">${linesHtml(compLines(c.comp, st.cat))}${fabricLine()}</div>
+        <div class="total"><span>Итого</span><b class="num">${rub(c.p[st.cat - 1])}</b></div>${srcHtml()}</div>
+      <div class="two"><button class="ghost-btn" data-act="build" data-id="${esc(c.series)}" data-from="${c.id}">Изменить состав</button>
+        <button class="ghost-btn" data-act="nonstd" data-base="cfg:${c.id}">Нужно иначе</button></div>
+    </div>`;
 }
 
 function vProd(sku) {
   const p = PROD[sku];
+  const rows = p.cats ? [1,2,3,4,5].map(k => `<span class="${k === st.cat ? 'on' : 'm'}">Категория ${k}</span><span class="v num ${k === st.cat ? 'on' : ''}">${rub(p.p[k - 1])}</span>`).join('') : '';
   return `${barHtml(p.type)}
-    <div class="hero photo"><img src="${p.photo}" alt="${esc(p.name)}"></div>
-    <div class="head"><h2>${esc(p.name)}</h2>
-      <div class="meta">${p.dims ? `<span class="tag">${esc(p.dims)}</span>` : ''}<span class="tag">${esc(p.lead)}</span><span class="tag">${esc(p.sku)}</span></div>
-      ${p.cats ? `<div class="lbl"><span>Категория ткани</span></div>${catSeg()}${fabBar()}` : ''}
-      <div class="price"><div class="cap">${p.cats ? 'Розница, категория ' + st.cat : 'Розница'}</div><div class="big num">${rub(priceAt(p.p, st.cat))}</div>
-        ${p.cats ? `<div class="why">${[1,2,3,4,5].map(k => `<div><span>Категория ${k}</span><span class="num">${rub(p.p[k - 1])}</span></div>`).join('')}</div>` : ''}
-        <div class="src">${ICON.check}<span>${esc(PRICE_LABEL)}, версия ${D.price.version}</span></div></div>
-      ${p.site ? `<div class="lbl"><a href="${esc(p.site)}" target="_blank" rel="noopener">Карточка на alikahome.ru →</a></div>` : ''}</div>
-    <button class="nonstd" data-act="nonstd" data-base="prod:${p.sku}">${ICON.plus}<span>Клиент хочет иначе, чем в каталоге?</span></button>
-    <div class="actions"><button class="btn" data-act="client" data-base="prod:${p.sku}">Показать клиенту</button></div>`;
+    <div class="hero"><img src="${p.photo}" alt="${esc(p.name)}" style="object-fit:contain;background:#fff;height:240px"></div>
+    <div class="sec stack" style="gap:14px">
+      <div class="stack" style="gap:8px"><h1 style="margin:0;font-size:22px;line-height:28px">${esc(p.name)}</h1>
+        <div class="tags">${p.dims ? `<span class="tag">${esc(p.dims)}</span>` : ''}<span class="tag">${esc(leadText(p.lead))}</span><span class="tag">${esc(p.sku)}</span></div></div>
+      <div class="rcpt">${p.cats ? `<div class="cap">Цена по категориям ткани</div><div class="lines">${rows}</div>` : ''}
+        <div class="total"><span>${p.cats ? 'Категория ' + st.cat : 'Цена'}</span><b class="num">${rub(priceAt(p.p, st.cat))}</b></div>${srcHtml()}</div>
+      <div class="two">${p.site ? `<a class="ghost-btn" href="${esc(p.site)}" target="_blank" rel="noopener">На сайте</a>` : '<span></span>'}
+        <button class="ghost-btn" data-act="nonstd" data-base="prod:${p.sku}">Нужно иначе</button></div>
+    </div>`;
 }
 
 function vBuild(series) {
@@ -576,16 +615,15 @@ function vBuild(series) {
   const comp = Object.entries(b.items).filter(([, n]) => n > 0);
   const total = comp.reduce((s, [mid, n]) => s + priceAt(MODS[mid].p, st.cat) * n, 0);
   return `${barHtml('Сборка ' + series)}
-    <div class="head"><h2>Своя компоновка ${esc(series)}</h2>
-      <div class="meta"><span class="tag">${b.from ? 'на основе ' + esc(cfgTitle(CFG[b.from])) : 'с нуля'}</span></div>
-      <div class="lbl"><span>Категория ткани</span></div>${catSeg()}${fabBar()}</div>
-    <div class="sec"><h2>Модули</h2><div class="list">${mods.map(m => { const n = b.items[m.id] || 0;
-      return `<div class="mod ${n ? 'on' : ''}"><span class="pic" style="background-image:url(${m.photo})"></span>
+    <div class="sec stack"><h1 style="margin:0;font-size:22px;line-height:28px">Своя компоновка ${esc(series)}</h1>
+      <span style="font-size:13px;color:var(--muted)">${b.from ? 'На основе: ' + esc(cfgTitle(CFG[b.from])) + ' ' + esc(cfgDims(CFG[b.from])) : 'Добавьте модули кнопкой «+»'}</span></div>
+    <div class="sec"><div class="cap">Модули</div><div class="list">${mods.map(m => { const n = b.items[m.id] || 0;
+      return `<div class="mod ${n ? 'on' : ''}"><img src="${m.photo}" alt="" loading="lazy">
         <span class="txt"><b>${esc(m.name)}</b><span class="num">${m.w} × ${m.d} см · ${rub(priceAt(m.p, st.cat))}</span></span>
-        <span class="step"><button data-act="dec" data-id="${m.id}" aria-label="Убрать">−</button><b class="num">${n}</b><button data-act="inc" data-id="${m.id}" aria-label="Добавить">+</button></span></div>`; }).join('')}</div></div>
-    <div class="wrap"><div class="price"><div class="total"><span class="cap">Итого, кат. ${st.cat}</span><span class="big num">${rub(total)}</span></div>
-      ${comp.length ? whyHtml(compLines(comp, st.cat), st.cat) : '<div class="cap" style="margin-top:6px">Добавьте модули кнопкой «+»</div>'}</div></div>
-    <div class="actions"><button class="btn" data-act="client" data-base="build:${esc(series)}" ${comp.length ? '' : 'disabled'}>Показать клиенту</button></div>`;
+        <span class="step"><button data-act="dec" data-id="${m.id}" aria-label="Убрать модуль">−</button><b class="num">${n}</b><button data-act="inc" data-id="${m.id}" aria-label="Добавить модуль">+</button></span></div>`; }).join('')}</div></div>
+    <div class="sec"><div class="rcpt"><div class="cap">Из чего цена</div>
+      ${comp.length ? `<div class="lines">${linesHtml(compLines(comp, st.cat))}${fabricLine()}</div>` : '<span style="font-size:14px;color:var(--muted)">Пока ничего не выбрано</span>'}
+      <div class="total"><span>Итого</span><b class="num">${rub(total)}</b></div>${comp.length ? srcHtml() : ''}</div></div>`;
 }
 
 /* ---------- nonstandard ---------- */
@@ -605,37 +643,35 @@ function answerText(a) {
   return 'Фабрика не делает';
 }
 function surcharge(a, price) { if (a.kind === 'fix') return a.v; if (a.kind === 'pct') return Math.ceil(price * a.v / 100 / 1000) * 1000; return 0; }
-
 function nsAnswers(v) {
   const b = baseInfo(v.base);
   const q = (v.text || '').trim();
   let answers = ANSWERS.filter(a => !b || a.series === '*' || a.series === b.series);
   if (q) { const qt = words(norm(q)).filter(w => w.length > 2);
     answers = answers.filter(a => { const hay = norm(a.q + ' ' + a.words); return qt.some(t => hay.includes(t.slice(0, Math.max(4, t.length - 2)))); }); }
-  return `<h2><span>Уже спрашивали у фабрики</span><span class="num">${answers.length}</span></h2>
-      <div class="list">${answers.length ? answers.map(a => { const i = ANSWERS.indexOf(a);
-        return `<div class="ans"><div class="q">${esc(a.series === '*' ? 'Любая модель' : a.series)}: ${esc(a.q)}</div>
-          <div class="a"><b>${esc(answerText(a))}</b> · ${esc(a.lead)}</div>
-          <div class="d"><span>Ответ фабрики от ${esc(a.date)} <span class="ex">пример</span></span>
-          ${b && b.price != null && a.kind !== 'no' ? `<button class="lnk" data-act="client-ans" data-i="${i}">Показать клиенту с доплатой →</button>` : ''}</div></div>`; }).join('')
-        : '<div class="empty" style="padding:14px"><b>Такого раньше не спрашивали</b>Отправьте запрос закупщику ниже.</div>'}</div>`;
+  return `<div class="cap">Уже спрашивали у фабрики · ${answers.length}</div>
+    <div class="list">${answers.length ? answers.map(a => { const i = ANSWERS.indexOf(a);
+      return `<div class="ans"><div class="q">${esc(a.series === '*' ? 'Любая модель' : a.series)}: ${esc(a.q)}</div>
+        <div class="a"><b>${esc(answerText(a))}</b> · ${esc(a.lead)}</div>
+        <div class="d"><span>Ответ фабрики от ${esc(a.date)} <span class="ex">пример</span></span>
+        ${b && b.price != null && a.kind !== 'no' ? `<button class="lnk" data-act="client-ans" data-i="${i}">Показать клиенту с доплатой</button>` : ''}</div></div>`; }).join('')
+      : '<div class="empty"><b>Такого раньше не спрашивали</b>Отправьте запрос закупщику ниже.</div>'}</div>`;
 }
 function vNonstd() {
   const v = view(); const b = baseInfo(v.base);
   return `${barHtml('Нет в каталоге')}
-    <div class="head"><h2>Клиент хочет то, чего нет в каталоге</h2>
-      <p class="cap" style="color:var(--muted);font-size:13px;margin:6px 0 0">Сначала проверьте, не спрашивали ли это у фабрики раньше. Если нет — отправьте запрос закупщику, клиенту сразу назовите цену основы.</p></div>
-    <div class="wrap" style="margin-top:14px"><div class="form">
+    <div class="sec stack"><h1 style="margin:0;font-size:22px;line-height:28px">Клиент хочет то, чего нет в каталоге</h1>
+      <span style="font-size:14px;color:var(--muted)">Сначала проверьте, не спрашивали ли это у фабрики. Если нет — отправьте запрос закупщику, а клиенту сразу назовите цену основы.</span></div>
+    <div class="sec"><div class="form">
       ${b ? `<div class="base"><span>Основа: <b>${esc(b.title)}</b></span><b class="num">${b.price != null ? rub(b.price) : ''}</b></div>` : ''}
       <label for="ns-text">Что клиент хочет изменить<textarea id="ns-text" placeholder="Например: металлические ножки вместо деревянных">${esc(v.text || '')}</textarea></label>
     </div></div>
     <div class="sec" id="ans">${nsAnswers(v)}</div>
-    <div class="sec"><h2>Новый запрос в закупки</h2><div class="form">
+    <div class="sec"><div class="cap">Новый запрос в закупки</div><div class="form">
       <label for="ns-phone">Телефон клиента, чтобы прислать КП<input id="ns-phone" type="tel" placeholder="+7 900 000-00-00" value="${esc(v.phone || '')}"></label>
-      <div class="upl"><label for="ns-photo" class="lnk" style="font-size:13px">Приложить фото или эскиз клиента</label><input id="ns-photo" type="file" accept="image/*" hidden>${st.upload ? `<img src="${st.upload}" alt="Фото к запросу">` : ''}</div>
+      <div class="upl"><label for="ns-photo" class="lnk" style="font-size:14px">Приложить фото или эскиз</label><input id="ns-photo" type="file" accept="image/*" hidden>${st.upload ? `<img src="${st.upload}" alt="Фото к запросу">` : ''}</div>
       <label class="toggle" for="ns-wait">Клиент ждёт в зале<input id="ns-wait" type="checkbox" ${v.wait === false ? '' : 'checked'}></label>
-    </div></div>
-    <div class="actions"><button class="btn" data-act="send">Отправить закупщику</button></div>`;
+    </div></div>`;
 }
 
 const STAGES = [
@@ -649,38 +685,38 @@ function vReq(no) {
   const r = st.reqs.find(x => x.no === no); const b = r.base;
   const t = Date.now() - r.ts; const cur = reqStage(r);
   return `${barHtml('Запрос ' + r.no)}
-    <div class="head"><h2>Запрос ${esc(r.no)}</h2><div class="meta">${r.wait ? '<span class="tag ok">клиент ждёт в зале · первым в очереди</span>' : '<span class="tag">клиент не ждёт</span>'}<span class="tag num">идёт ${mmss(t)}</span></div></div>
-    <div class="wrap" style="margin-top:14px"><div class="req">
+    <div class="sec stack"><h1 style="margin:0;font-size:22px;line-height:28px">Запрос ${esc(r.no)}</h1>
+      <div class="tags">${r.wait ? '<span class="tag" style="color:var(--ok);background:var(--ok-soft);border-color:transparent">клиент ждёт в зале · первым в очереди</span>' : '<span class="tag">клиент не ждёт</span>'}<span class="tag num">идёт ${mmss(t)}</span></div></div>
+    <div class="sec"><div class="req">
       ${b ? `<div class="base"><span>Основа: <b>${esc(b.title)}</b></span><b class="num">${b.price != null ? rub(b.price) : ''}</b></div>` : ''}
-      <div><div class="cap" style="font-size:12px;color:var(--muted)">Что изменить</div><div>${esc(r.text)}</div></div>
+      <div><div style="font-size:12px;color:var(--muted)">Что изменить</div><div>${esc(r.text)}</div></div>
       ${r.photo ? `<img src="${r.photo}" alt="Фото к запросу" style="max-width:120px;border-radius:4px">` : ''}
       <div class="steps">${STAGES.map(s => `<div class="${s === cur ? 'now' : (t >= s.at ? 'done' : '')}"><i></i>${esc(s.label)}</div>`).join('')}
-        <div><i></i>Ответ фабрики: цена и срок — придут сюда и в КП клиенту${r.phone ? ' на ' + esc(r.phone) : ''}</div></div>
+        <div><i></i>Ответ фабрики: цена и срок придут сюда и в КП клиенту${r.phone ? ' на ' + esc(r.phone) : ''}</div></div>
     </div></div>
-    <p class="note">Пока фабрика считает, клиент уже знает цену основы${b && b.price != null ? ` (${rub(b.price)})` : ''} и срок ответа. Ответ фабрики сохранится в базе: следующий продавец увидит его сразу.</p>
-    <div class="actions">${b && b.price != null ? `<button class="btn ghost" data-act="client" data-base="${esc(r.baseKey)}">Цена основы клиенту</button>` : ''}<button class="btn" data-act="home">К поиску</button></div>`;
+    <p class="note">Пока фабрика считает, клиент уже знает цену основы${b && b.price != null ? ` (${rub(b.price)})` : ''} и срок ответа. Ответ фабрики сохранится в базе: следующий продавец увидит его сразу.</p>`;
 }
 
 /* ---------- client view ---------- */
 function openClient(baseKey, ans) {
   const b = baseInfo(baseKey); if (!b) return;
+  stopScan();
   const ms = swStop();
   const f = fab();
   let total = b.price; let extra = '';
   if (ans != null) { const a = ANSWERS[ans]; const s = surcharge(a, b.price); total += s;
-    extra = `<div><span>${esc(a.q)}</span><span class="num">${s >= 0 ? '+' : '−'}${rub(Math.abs(s))}</span></div>`; }
+    extra = `<span>${esc(a.q)}</span><span class="v num">${s >= 0 ? '+' : '−'}${rub(Math.abs(s))}</span>`; }
   $layer.innerHTML = `<div class="client" role="dialog" aria-label="Для клиента"><div class="in">
-    <div class="logo"><span class="mark">AH</span>ALIKA HOME</div>
+    <div class="brand"><img class="light" src="${LOGO_FULL}" alt="Alika Home"><img class="dark" src="${LOGO_MARK}" alt="Alika Home"></div>
     <div class="pic ${b.scheme ? '' : 'photo'}"><img src="${b.img}" alt="${esc(b.title)}"></div>
-    <h2>${esc(b.title)}</h2>
-    <div class="cap" style="color:var(--muted);font-size:13px">${esc([b.dims, b.lead ? 'изготовление ' + b.lead : ''].filter(Boolean).join(' · '))}</div>
-    ${b.lines.length || extra ? `<div class="lines">${b.lines.map(l => `<div><span>${esc(l[0])}</span><span class="num">${l[1]}</span></div>`).join('')}${extra}</div>` : ''}
-    <div class="lines">${(b.cats !== false) ? `<div><span>Ткань</span><span>${f ? esc(f.name) : 'категория ' + st.cat}</span></div>` : ''}</div>
-    <div class="sum"><div class="cap" style="color:var(--muted);font-size:13px">Цена</div><div class="big num">${rub(total)}</div>
-      <div class="fine">По прайсу от ${esc(D.price.label)}, на ${TODAY}. ${ans != null ? 'Доплата — по ответу фабрики от ' + esc(ANSWERS[ans].date) + '. ' : ''}Окончательная цена и срок — в коммерческом предложении. Прототип: цены условные.</div></div>
+    <div><h2>${esc(b.title)}</h2><div class="sub">${esc([b.dims, b.lead ? 'изготовление ' + leadText(b.lead) : ''].filter(Boolean).join(' · '))}</div></div>
+    ${b.lines.length || extra ? `<div class="lines">${linesHtml(b.lines)}${extra}</div>` : ''}
+    ${b.cats !== false ? `<div class="fabric">${f && f.img ? `<img src="${f.img}" alt="">` : ''}<span>${f ? 'Ткань ' + esc(f.name) : 'Ткань категории ' + st.cat}</span></div>` : ''}
+    <div class="sum"><span style="font-size:14px;color:var(--muted)">Цена</span><b class="num">${rub(total)}</b>
+      <span class="fine">По прайсу от ${esc(D.price.label)} на ${TODAY}. ${ans != null ? 'Доплата — по ответу фабрики от ' + esc(ANSWERS[ans].date) + '. ' : ''}Окончательная цена и срок — в коммерческом предложении. Прототип: цены условные.</span></div>
     ${ms != null ? `<div class="timer">${ICON.timer} Цена найдена и показана за ${mmss(ms)}</div>` : ''}
   </div>
-  <div class="actions"><button class="btn ghost flex0" data-act="close">Закрыть</button><button class="btn" data-act="kp">Отправить КП клиенту</button></div></div>`;
+  <div class="actions"><button class="btn ghost flex0" data-act="close">Закрыть</button><button class="btn" data-act="kp">Отправить КП</button></div></div>`;
 }
 function closeLayer() { stopScan(); $layer.innerHTML = ''; }
 
@@ -700,23 +736,23 @@ function fillFabrics() {
   if (fq) list = search(fq).filter(it => it.kind === 'fab').map(it => it.id);
   if (fc) list = list.filter(i => FABS[i].cat === fc);
   box.innerHTML = `<div class="quick" style="margin:10px 0 12px">${[0,1,2,3,5].map(k => `<button class="chip ${k === fc ? 'on' : ''}" data-act="fcat" data-k="${k}">${k ? 'Кат. ' + k : 'Все'}</button>`).join('')}</div>
-      <div class="grid">${list.slice(0, 120).map(i => { const f = FABS[i];
-        return `<button class="fab ${i === st.fabric ? 'on' : ''}" data-act="setfab" data-i="${i}"><span class="sw-img" style="${f.img ? `background-image:url(${f.img})` : ''}"></span>${esc(f.name)}<em>${esc(f.kind)} · кат. ${f.cat}</em></button>`; }).join('')}</div>
-      ${list.length ? '' : '<div class="empty">Такой ткани нет в каталоге фабрики. Это нестандарт: спросите закупки.</div>'}`;
+    <div class="grid">${list.slice(0, 120).map(i => { const f = FABS[i];
+      return `<button class="fab ${i === st.fabric ? 'on' : ''}" data-act="setfab" data-i="${i}">${f.img ? `<img src="${f.img}" alt="">` : '<span class="ph"></span>'}<span>${esc(f.name)}</span><em>${esc(f.kind)} · кат. ${f.cat}</em></button>`; }).join('')}</div>
+    ${list.length ? '' : '<div class="empty">Такой ткани нет в каталоге фабрики. Это нестандарт: спросите закупки.</div>'}`;
 }
 function openQr() {
   $layer.innerHTML = `<div class="shade" data-act="shade"><div class="sheet" role="dialog" aria-label="QR на образце">
     <div class="sh"><h3>QR на образце в зале</h3><button class="lnk" data-act="close">Закрыть</button></div>
     <div class="sb"><div class="cam"><video id="cam" playsinline muted autoplay></video><div class="frame"></div><div class="wait" id="camwait">Включаю камеру…</div></div>
       <p class="cammsg" id="cammsg">Наведите камеру на QR-наклейку образца.</p>
-      <h2 style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:4px 0 10px;font-weight:600">Или выберите образец</h2>
-      <div class="list">${FLOOR.map(f => f.type === 'cfg'
-        ? `<button class="row" data-act="scan" data-t="cfg" data-id="${f.id}"><span class="pic" style="background-image:url(${CFG[f.id].img})"></span><span class="txt"><span class="t">${esc(cfgTitle(CFG[f.id]))}</span><span class="s">${esc(f.place)}</span></span><span class="pr">${ICON.qr}</span></button>`
-        : `<button class="row" data-act="scan" data-t="prod" data-id="${f.id}"><span class="pic photo" style="background-image:url(${PROD[f.id].photo})"></span><span class="txt"><span class="t">${esc(PROD[f.id].name)}</span><span class="s">${esc(f.place)}</span></span><span class="pr">${ICON.qr}</span></button>`).join('')}</div></div></div></div>`;
+      <div class="cap">Или выберите образец</div>
+      <div class="list">${FLOOR.map(f => {
+        const isCfg = f.type === 'cfg'; const it = isCfg ? CFG[f.id] : PROD[f.id];
+        return `<button class="row" data-act="scan" data-t="${f.type}" data-id="${f.id}"><span class="txt"><span class="t">${esc(isCfg ? cfgTitle(it) : it.name)}</span><span class="s">${esc(f.place)}</span></span><img class="pic ${isCfg ? '' : 'photo'}" src="${isCfg ? it.img : it.photo}" alt=""></button>`; }).join('')}</div></div></div></div>`;
   startScan();
 }
 
-/* ---------- QR scanner: camera + jsQR. Where the camera is refused, the list above stays as the fallback. ---------- */
+/* ---------- QR scanner: camera + jsQR. Where the camera is refused, the list stays as the fallback. ---------- */
 let scan = null;
 function loadJsQR() {
   if (window.jsQR) return Promise.resolve();
@@ -775,8 +811,8 @@ function openAbout() {
     <div class="sb" style="font-size:14px;line-height:1.55">
       <p style="margin-top:0"><b>Задача.</b> Продавец называет цену, пока клиент в зале: стандарт — за секунды, нестандарт — с ценой основы и сроком ответа фабрики.</p>
       <p><b>Данные.</b> ${D.cfgs.length} готовых компоновок Bon Bon, Cubic и Orion со схемами из каталога, ${Object.keys(MODS).length} модулей и ${D.products.length} товаров Saloni с фото с сайта. Розница посчитана из прайса фабрики по той же формуле, что в портале закупок; исходные цифры — сайт alikahome.ru, сентябрь 2026.</p>
-      <p><b>Условно.</b> Категории тканей, ответы фабрики, этапы запроса и QR-сканер. В рабочей версии цены читаются прямо из таблицы розницы, продавец видит только розницу.</p>
-      <p style="margin-bottom:0"><b>Секундомер.</b> Нажмите «Засечь», найдите цену и нажмите «Показать клиенту» — экран покажет, сколько это заняло.</p></div></div></div>`;
+      <p><b>Условно.</b> Категории тканей, ответы фабрики и этапы запроса. В рабочей версии цены читаются прямо из таблицы розницы, продавец видит только розницу.</p>
+      <p style="margin-bottom:0"><b>Секундомер.</b> Нажмите значок часов, найдите цену и нажмите «Показать клиенту» — экран покажет, сколько это заняло.</p></div></div></div>`;
 }
 
 /* ---------- render ---------- */
@@ -792,14 +828,16 @@ function render() {
   else if (v.v === 'nonstd') html = vNonstd();
   else if (v.v === 'req') { html = vReq(v.id); reqTick = setInterval(() => { if (view().v === 'req') { const y = scrollY; $app.innerHTML = vReq(view().id); scrollTo(0, y); } }, 1000); }
   $app.innerHTML = html;
+  $dock.innerHTML = dockHtml(v);
+  measureDock();
 }
 
 /* ---------- events ---------- */
 document.addEventListener('input', e => {
   if (e.target.id === 'q') { st.q = e.target.value; updateResults(); }
   else if (e.target.id === 'ns-text') { view().text = e.target.value; const box = document.getElementById('ans'); if (box) box.innerHTML = nsAnswers(view()); }
-  else if (e.target.id === 'fq') { st.fq = e.target.value; fillFabrics(); }
   else if (e.target.id === 'ns-phone') { view().phone = e.target.value; }
+  else if (e.target.id === 'fq') { st.fq = e.target.value; fillFabrics(); }
 });
 document.addEventListener('change', e => {
   if (e.target.id === 'ns-wait') view().wait = e.target.checked;
@@ -807,6 +845,7 @@ document.addEventListener('change', e => {
     const r = new FileReader(); r.onload = () => { st.upload = r.result; render(); }; r.readAsDataURL(e.target.files[0]);
   }
 });
+document.addEventListener('focusin', e => { if (e.target.id === 'q') window.scrollTo(0, 0); });
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]'); if (!el) return;
   const a = el.dataset.act, id = el.dataset.id;
@@ -816,7 +855,8 @@ document.addEventListener('click', e => {
     case 'home': home(); break;
     case 'sw': swToggle(); break;
     case 'clear': { st.q = ''; const i = document.getElementById('q'); if (i) { i.value = ''; i.focus(); } updateResults(); break; }
-    case 'quick': st.q = el.dataset.q; st.group = 'Все'; render(); break;
+    case 'tosearch': { home(); const i = document.getElementById('q'); if (i) i.focus(); break; }
+    case 'quick': { st.q = el.dataset.q; st.group = 'Все'; render(); break; }
     case 'group': st.group = el.dataset.g; render(); break;
     case 'series': go({ v: 'series', id }); break;
     case 'cfg': go({ v: 'cfg', id }); break;
@@ -828,7 +868,7 @@ document.addEventListener('click', e => {
     case 'setfab': setFabric(+el.dataset.i); break;
     case 'nofab': setFabric(null); break;
     case 'qr': openQr(); break;
-    case 'scan': closeLayer(); go({ v: el.dataset.t, id }); toast('QR считан'); break;
+    case 'scan': closeLayer(); go({ v: el.dataset.t, id }); toast('Образец открыт'); break;
     case 'about': openAbout(); break;
     case 'close': closeLayer(); break;
     case 'build': {
@@ -853,6 +893,7 @@ document.addEventListener('click', e => {
   }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $layer.innerHTML) closeLayer(); });
+window.addEventListener('resize', measureDock);
 
 render();
 function fromHash() { const h = decodeURIComponent(location.hash.slice(1)); if (h) openHash(h, false); }
